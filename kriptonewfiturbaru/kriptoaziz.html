@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Program Kriptografi - Caesar & Vigenère Cipher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #fdf6e3;
+            color: #333;
+            font-family: 'Special Elite', monospace;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;  
+            border: 1px solid #ccc;
+            padding: 35px;
+            max-width: 650px;
+            margin: auto;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before,
+        .container::after {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            font-size: 3em;
+            color: rgba(183, 28, 28, 0.2);
+            opacity: 0.2;
+            z-index: 0;
+        }
+        .container::before {
+            content: "\f023";
+            top: -20px;
+            left: -20px;
+            transform: rotate(-30deg);
+        }
+        .container::after {
+            content: "\f084";
+            bottom: -20px;
+            right: -20px;
+            transform: rotate(30deg);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px dashed #aaa;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            color: #b71c1c;
+            border: 3px double #b71c1c;
+            display: inline-block;
+            padding: 5px 15px;
+            font-size: 24px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .user-info {
+            line-height: 1.8;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 25px;
+            background-color: #fafafa;
+            position: relative;
+            z-index: 1;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: left;
+            position: relative;
+            z-index: 1;
+        }
+        label i {
+            margin-right: 8px;
+            color: #b71c1c;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            background-color: transparent;
+            outline: none;
+            font-family: 'Special Elite', monospace;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-bottom: 2px solid #333;
+        }
+        input[type="number"] {
+            width: 150px;
+        }
+        button {
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: #333;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Special Elite', monospace;
+            font-size: 16px;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+        button:hover {
+            background: #b71c1c;
+        }
+        .hasil {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border: 1px dashed #ccc;
+            line-height: 1.8;
+            text-align: left;
+            position: relative;
+            z-index: 1;
+        }
+        .hasil h3 {
+            color: #b71c1c;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-lock"></i> Caesar & Vigenère Cipher</h1>
+        </div>
+        
+        <div class="user-info">
+            <b>Nama:</b> Nuafal Aziz Mulyono<br>
+            <b>NIM:</b> 230170068<br>
+            <b>Mata Kuliah:</b> Kriptografi dan Steganografi
+        </div>
+
+        <form id="cipherForm">
+            <label for="cipherType"><i class="fa-solid fa-code"></i> Pilih Jenis Cipher:</label>
+            <select id="cipherType">
+                <option value="caesar">Caesar Cipher</option>
+                <option value="vigenere">Vigenère Cipher</option>
+            </select>
+
+            <label for="text"><i class="fa-solid fa-message"></i> Pesan untuk dienkripsi:</label>
+            <textarea id="text" rows="3" placeholder="Masukkan teks di sini..."></textarea>
+
+            <div id="caesarKey">
+                <label for="shift"><i class="fa-solid fa-key"></i> Kunci Pergeseran (Caesar):</label>
+                <input type="number" id="shift" value="5">
+            </div>
+
+            <div id="vigenereKey" style="display:none;">
+                <label for="vigenere"><i class="fa-solid fa-key"></i> Kata Kunci (Vigenère):</label>
+                <input type="text" id="vigenere" placeholder="contoh: crypto">
+            </div>
+
+            <button type="submit"><i class="fa-solid fa-paper-plane"></i> Proses Enkripsi</button>
+        </form>
+
+        <div id="hasil" class="hasil" style="display:none;">
+            <h3><i class="fa-solid fa-scroll"></i> --- Hasil ---</h3>
+            <p><b>Pesan Asli:</b> <span id="original"></span></p>
+            <p><b>Pesan Terenkripsi:</b> <span id="encrypted"></span></p>
+            <hr>
+            <p><b>Pesan Diterima:</b> <span id="received"></span></p>
+            <p><b>Pesan Didekripsi:</b> <span id="decrypted"></span></p>
+        </div>
+    </div>
+
+    <script>
+        const ASCII_MIN = 32;
+        const ASCII_MAX = 126;
+        const ASCII_RANGE = ASCII_MAX - ASCII_MIN + 1;
+
+        function caesarEncrypt(text, shift) {
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                let code = text.charCodeAt(i);
+                if (code >= ASCII_MIN && code <= ASCII_MAX) {
+                    let newCode = (code - ASCII_MIN + shift) % ASCII_RANGE;
+                    if (newCode < 0) newCode += ASCII_RANGE;
+                    result += String.fromCharCode(newCode + ASCII_MIN);
+                } else {
+                    result += text[i];
+                }
+            }
+            return result;
+        }
+
+        function caesarDecrypt(cipher, shift) {
+            return caesarEncrypt(cipher, -shift);
+        }
+
+        function vigenereEncrypt(text, key) {
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                let code = text.charCodeAt(i);
+                if (code >= ASCII_MIN && code <= ASCII_MAX) {
+                    let shift = key.charCodeAt(i % key.length) - ASCII_MIN;
+                    let newCode = (code - ASCII_MIN + shift) % ASCII_RANGE;
+                    result += String.fromCharCode(newCode + ASCII_MIN);
+                } else {
+                    result += text[i];
+                }
+            }
+            return result;
+        }
+
+        function vigenereDecrypt(cipher, key) {
+            let result = "";
+            for (let i = 0; i < cipher.length; i++) {
+                let code = cipher.charCodeAt(i);
+                if (code >= ASCII_MIN && code <= ASCII_MAX) {
+                    let shift = key.charCodeAt(i % key.length) - ASCII_MIN;
+                    let newCode = (code - ASCII_MIN - shift + ASCII_RANGE) % ASCII_RANGE;
+                    result += String.fromCharCode(newCode + ASCII_MIN);
+                } else {
+                    result += cipher[i];
+                }
+            }
+            return result;
+        }
+
+        // Toggle antar cipher
+        document.getElementById("cipherType").addEventListener("change", function() {
+            const type = this.value;
+            document.getElementById("caesarKey").style.display = type === "caesar" ? "block" : "none";
+            document.getElementById("vigenereKey").style.display = type === "vigenere" ? "block" : "none";
+        });
+
+        document.getElementById("cipherForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            let text = document.getElementById("text").value;
+            let type = document.getElementById("cipherType").value;
+            let encrypted = "", decrypted = "";
+
+            if (type === "caesar") {
+                let shift = parseInt(document.getElementById("shift").value);
+                encrypted = caesarEncrypt(text, shift);
+                decrypted = caesarDecrypt(encrypted, shift);
+            } else {
+                let key = document.getElementById("vigenere").value;
+                if (!key) {
+                    alert("Masukkan kata kunci untuk Vigenère Cipher!");
+                    return;
+                }
+                encrypted = vigenereEncrypt(text, key);
+                decrypted = vigenereDecrypt(encrypted, key);
+            }
+
+            document.getElementById("original").textContent = text;
+            document.getElementById("encrypted").textContent = encrypted;
+            document.getElementById("received").textContent = encrypted;
+            document.getElementById("decrypted").textContent = decrypted;
+            document.getElementById("hasil").style.display = "block";
+        });
+    </script>
+</body>
+</html>
